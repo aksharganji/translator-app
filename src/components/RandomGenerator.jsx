@@ -1,72 +1,129 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import PageWrapper from "../components/PageWrapper";
 
-export default function RandomGenerator() {
+export default function RandomGeneratorPage() {
   const [length, setLength] = useState(12);
   const [result, setResult] = useState("");
   const [auto, setAuto] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const playClick = () => new Audio("/sounds/click.wav").play();
+  const generateString = () => {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+    let str = "";
 
-  const generateString = useCallback(() => {
-    playClick();
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#%&!";
-    let out = "";
     for (let i = 0; i < length; i++) {
-      out += chars[Math.floor(Math.random() * chars.length)];
+      str += chars[Math.floor(Math.random() * chars.length)];
     }
-    setResult(out);
-  }, [length]);
 
+    setResult(str);
+  };
+
+  // Auto-generate every 1 sec
   useEffect(() => {
-    let i = null;
-    if (auto) i = setInterval(generateString, 1200);
-    return () => clearInterval(i);
-  }, [auto, generateString]);
+    let timer;
+    if (auto) {
+      timer = setInterval(() => generateString(), 1000);
+    }
+    return () => clearInterval(timer);
+  }, [auto, length]);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-2xl bg-black/50 p-10 rounded-2xl border border-purple-500/20 shadow-2xl">
+    <PageWrapper direction="left">
+      <div className="min-h-screen px-4 py-10 flex justify-center
+        bg-gradient-to-br from-[#060b18] to-[#0a1129]">
 
-        <h1 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-purple-300 to-blue-300 text-transparent bg-clip-text">
-          🔐 Random String Generator
-        </h1>
+        <div className="max-w-3xl w-full bg-white/5 backdrop-blur-xl 
+          border border-white/10 shadow-2xl rounded-2xl p-10">
 
-        <label>String Length:</label>
-        <input
-          type="number"
-          className="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 mb-4"
-          value={length}
-          onChange={(e) => setLength(Number(e.target.value))}
-        />
+          <h1 className="text-4xl font-bold text-center mb-8 
+            bg-gradient-to-r from-purple-400 to-blue-400 
+            text-transparent bg-clip-text flex justify-center items-center gap-3">
+            🔐 Random String Generator
+          </h1>
 
-        {/* Neon Button */}
-        <button
-          onClick={generateString}
-          className="w-full p-3 rounded-lg text-white bg-gradient-to-r from-purple-600 to-blue-600 shadow-lg hover:shadow-purple-500/50 transition"
-        >
-          Generate
-        </button>
+          {/* INPUT - STRING LENGTH */}
+          <label className="text-gray-300 text-lg">String Length:</label>
+          <input
+            type="number"
+            className="w-full mt-2 mb-4 px-4 py-3 rounded-lg bg-black/40 
+              border border-white/10 text-white outline-none"
+            value={length}
+            onChange={(e) => setLength(e.target.value)}
+            min="1"
+          />
 
-        <div className="flex justify-between mt-4">
-          <label>Auto Generate</label>
-          <input type="checkbox" checked={auto} onChange={() => setAuto(!auto)} />
+          {/* GENERATE BUTTON */}
+          <button
+            onClick={generateString}
+            className="w-full py-3 rounded-lg text-white font-semibold
+            bg-gradient-to-r from-purple-600 to-blue-600 
+            shadow-lg hover:shadow-purple-400/40 transition hover:-translate-y-1"
+          >
+            Generate
+          </button>
+
+          {/* AUTO GENERATE SWITCH */}
+          <div className="mt-6 flex items-center justify-between">
+            <span className="text-white text-lg">Auto Generate</span>
+
+            {/* Beautiful Toggle Switch */}
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={auto}
+                onChange={() => setAuto(!auto)}
+                className="hidden"
+              />
+              <div
+                className={
+                  "w-14 h-7 flex items-center rounded-full p-1 duration-300 " +
+                  (auto ? "bg-purple-500" : "bg-gray-600")
+                }
+              >
+                <div
+                  className={
+                    "bg-white w-6 h-6 rounded-full shadow-md transform duration-300 " +
+                    (auto ? "translate-x-7" : "")
+                  }
+                ></div>
+              </div>
+            </label>
+          </div>
+
+          {/* RESULT BOX */}
+          <label className="text-gray-300 text-lg mt-6 block">
+            Generated String:
+          </label>
+
+          <textarea
+            className="w-full h-24 mt-2 px-4 py-3 rounded-lg bg-black/40 
+            border border-white/10 text-white outline-none"
+            value={result}
+            readOnly
+          ></textarea>
+
+          {/* COPY BUTTON */}
+          <button
+            onClick={copyToClipboard}
+            className="w-full mt-4 py-3 rounded-lg font-semibold text-white
+            bg-gradient-to-r from-blue-500 to-purple-600 
+            shadow-lg hover:shadow-blue-400/40 transition hover:-translate-y-1 flex justify-center items-center gap-2"
+          >
+            📋 Copy
+          </button>
+
+          {copied && (
+            <p className="text-green-400 mt-2 text-center">Copied to clipboard!</p>
+          )}
         </div>
-
-        <label className="mt-4 block">Generated String:</label>
-        <textarea
-          className="w-full h-24 p-3 bg-gray-900 border border-gray-700 rounded-lg text-lg"
-          value={result}
-          readOnly
-        />
-
-        <button
-          onClick={() => navigator.clipboard.writeText(result)}
-          className="w-full mt-4 p-3 rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg hover:shadow-blue-500/50 transition"
-        >
-          📋 Copy
-        </button>
-
       </div>
-    </div>
+    </PageWrapper>
   );
 }
